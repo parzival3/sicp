@@ -1,0 +1,136 @@
+:PROPERTIES:
+:header-args:racket: :tangle (concat (plist-get (plist-get (org-element-at-point) 'src-block) ':name) ".rkt")
+:END:
+#+TITLE: Chapter 1 SICP
+* Exercise 6
+#+begin_src racket
+(define (average x y)
+  (/ (+ x y) 2))
+
+(define (improve guess x)
+  (average guess (/ x guess)))
+
+(define (square x)
+  (* x x))
+
+(define (good-enough? guess x)
+  (< (abs (- (square guess) x)) 0.001))
+
+(define (sqrt-iter guess x)
+  (if (good-enough? guess x)
+      guess
+      (sqrt-iter (improve guess x) x)))
+
+(define (sqrt x)
+  (sqrt-iter 1.0 x))
+
+(define (new-if predicate then-clause else-clause)
+  (cond (predicate then-clause)
+        (else else-clause)))
+
+(define (new-sqrt-iter guess x)
+  (new-if (good-enough? guess x)
+          guess
+          (new-sqrt-iter (improve guess x) x)))
+
+(define (new-sqrt x)
+  (new-sqrt-iter 1 x))
+
+;; Better approximation for the cube is given by
+;; (x/y^2 + 2y)/3
+(define (cube x)
+  (* x x x))
+
+(define (sqrt-3 x)
+  (define (good-enough? guess)
+    (< (abs (- x (cube guess))) 0.001))
+
+  (define (improve guess)
+    (/ (+ (/ x (square guess)) (* 2 guess)) 3))
+
+  (define (sqrt-3-iter guess)
+    (if (good-enough? guess)
+        guess
+    (sqrt-3-iter (improve guess))))
+  (sqrt-3-iter 1))
+
+(sqrt 2)
+(sqrt-3 3)
+#+end_src
+* Exercise 11
+  #+NAME: 11
+  #+begin_src racket
+    (define (f-iterative n)
+      (cond ((< n 3) n)
+            (else (+ (f-iterative (- n 1)) (* 2 (f-iterative (- n 2))) (* 3 (f-iterative (- n 3)))))))
+
+    (define (f-recursive n)
+      (define (f-impl counter one two three n)
+        (cond ((>= counter n) one)
+              (else (f-impl (+ 1 counter)
+                                 (+ one (* 2 two) (* 3 three))
+                                 one
+                                 two
+                                 n))))
+      (f-impl 3 4 3 0 n))
+  #+end_src
+* Exercise 12
+  I don't really understand this exercise but I'll try it by creating a procedure that prints
+  the triangle on the console
+  #+NAME: 12
+  #+begin_src racket
+      (define (pascal-triangle len)
+        (cond ((= len 0) 0)
+              (())))
+  #+end_src
+
+* Exercise 13
+* Exercise 14
+  #+NAME: 14
+  #+begin_src racket
+    (define (cc amount kinds-of-coins)
+      (cond ((= amount 0) 1)
+            ((or (< amount 0) (= kinds-of-coins 0)) 0)
+            (else (+ (cc amount
+                         (- kinds-of-coins 1))
+                     (cc (- amount
+                            (first-denomination kinds-of-coins))
+                         kinds-of-coins)))))
+    ;; pretty priting
+    (define (cc-pp amount kinds-of-coins)
+      (cond ((= amount 0) (list 1 (format "cc ~v ~v \n" 1 kinds-of-coins)))
+            ((or (< amount 0) (= kinds-of-coins 0)) (list 0 (format "cc ~v ~v \n" 0 kinds-of-coins)))
+            (else
+
+             (let ((a (cc-pp amount (- kinds-of-coins 1)))
+                   (b (cc-pp (- amount (first-denomination kinds-of-coins)) kinds-of-coins)))
+               (list (+ (car a) (car b)) (string-append (cadr a) " " (cadr b)))))))
+
+    (define (first-denomination kinds-of-coins)
+      (cond ((= kinds-of-coins 1) 1)
+            ((= kinds-of-coins 2) 5)
+            ((= kinds-of-coins 3) 10)
+            ((= kinds-of-coins 4) 25)
+            ((= kinds-of-coins 5) 50)))
+
+    (define (count-change amount)
+      (cc amount 5))
+
+    (define (count-change-pp amount)
+      (cc-pp amount 5))
+  #+end_src
+* Exercise 15
+  #+NAME: 15
+  #+begin_src racket
+    (define (cube x)
+      (* x x x))
+
+    (define (p x)
+      (- (* 3 x) (* 4 (cube x))))
+
+    (define (sine angle)
+      (print "+ \n")
+      (if (not (> (abs angle) 0.1))
+          angle
+          (p (sine (/ angle 3.0)))))
+  #+end_src
