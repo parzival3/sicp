@@ -2,7 +2,33 @@
 :header-args:racket: :tangle (concat (plist-get (plist-get (org-element-at-point) 'src-block) ':name) ".rkt")
 :END:
 #+TITLE: Chapter 1 SICP
+* Common Library
+  #+NAME: square
+  #+begin_src racket :filename sicp-library.rkt
+    #lang racket
+    (define (square n)
+      (* n n))
+
+    (provide (all-defined-out))
+  #+end_src
+
+* Exercise 5
+  Trying to call /f/ with an interpreter that supports only the normal-order of evaluation we will have a infinite loop beacuse /p/
+  is a recursive procedure that doesn't have an end condition.
+  On the other hand, with an interpreter that uses the applicative order of evaluation, the result will be ~0~ it will try to evaluate
+  the /if/ predicate and thus verify that the /a/ paratmeter is in fact ~0~.
+  #+begin_src racket
+(define (p) (p))
+
+(define (f a b)
+  (if (= a 0)
+      0
+      b))
+
+(f 0 (p))
+  #+end_src
 * Exercise 6
+
 #+begin_src racket
 (define (average x y)
   (/ (+ x y) 2))
@@ -75,13 +101,21 @@
       (f-impl 3 4 3 0 n))
   #+end_src
 * Exercise 12
-  I don't really understand this exercise but I'll try it by creating a procedure that prints
-  the triangle on the console
+  The exercise is not very clear, but most of the solutions online define a function with two parameters, the row and column number.
+  The function /pacal-triangle/ considers a triangle that starts at row 0 and column 0.
   #+NAME: 12
   #+begin_src racket
-      (define (pascal-triangle len)
-        (cond ((= len 0) 0)
-              (())))
+    (define (pascal-triangle row column)
+      (cond ((> column row ) 0)
+            ((< row 2) 1)
+            ((= column 0) 1)
+            (else (+ (pascal-triangle (- row 1) (- column 1))
+                     (pascal-triangle (- row 1) column )))))
+
+
+    (pascal-triangle 2 1)
+    (pascal-triangle 3 2)
+    (pascal-triangle 4 2)
   #+end_src
 
 * Exercise 13
@@ -105,6 +139,16 @@
              (let ((a (cc-pp amount (- kinds-of-coins 1)))
                    (b (cc-pp (- amount (first-denomination kinds-of-coins)) kinds-of-coins)))
                (list (+ (car a) (car b)) (string-append (cadr a) " " (cadr b)))))))
+
+    (define-syntax (cc-macro stx)
+      (let ((ammount ))
+             (kinds-of-coins (caddr (syntax->datum stx))))
+         (cond ((= (cadr (syntax->datum stx) 0) 1)
+               ((or (< (cadr (syntax->datum stx) 0) (= (caddr (syntax->datum stx) 0)) 0)
+               (`(+ (cc-macro ,(cadr (syntax->datum stx) ,(- (caddr (syntax->datum stx) 1))
+                (cc-macro ,(- (cadr (syntax->datum stx) (first-denomination
+                     (caddr (syntax->datum stx)))
+                ,(caddr (syntax->datum stx)))))))
 
     (define (first-denomination kinds-of-coins)
       (cond ((= kinds-of-coins 1) 1)
@@ -134,3 +178,114 @@
           angle
           (p (sine (/ angle 3.0)))))
   #+end_src
+
+* Exercise 16
+  #+NAME: 16
+#+begin_src racket
+  (define (square b)
+    (* b b))
+
+  (define (fast-expr b n)
+    (cond ((= n 0) 1)
+          ((even? n) (square (fast-expr b (/ n 2))))
+          (else (* b (fast-expr b (- n 1))))))
+
+  (define (fast-expr-rec b n)
+    (define (fast-expr-impl b n c)
+      (cond ((<= n 1) (* b c))
+              ((even? (fast-expr-impl b (/ n 2) (* c (square b)))))
+              (else (fast-expr-impl b (- n 1) (* b c)))))
+    (fast-expr-impl b n 1))
+
+  (fast-expr 3 3)
+  (fast-expr-rec 3 3)
+#+end_src
+
+* Exercise 17
+#+NAME: 17
+#+begin_src racket
+  (define (double x)
+    (* 2 x))
+
+  (define (halve x)
+    (/ x 2))
+
+  (define (multy a b)
+    (if (= b 0)
+        0
+        (+ a (multy a (- b 1)))))
+
+  (define (fast-multy-rec a b)
+    (cond ((= b 1) a)
+          ((even? b) (double (fast-multy-rec a (halve b))))
+          (else (+ a (fast-multy-rec a (+ b -1))))))
+
+
+#+end_src
+
+* Exercise 18
+#+NAME: 18
+#+begin_src racket
+<<17>>
+  (define (fast-multy-iter a b)
+    (define (fast-multy-impl a b acc)
+      (cond ((= b 1) acc)
+            ((even? b) (fast-multy-impl a (halve b) (+ acc (double a))))
+            (else (fast-multy-impl a (+ b -1) (+ acc a)))))
+    (fast-multy-impl a b 0))
+#+end_src
+
+* Exercise 19
+  I've struggled a bit with this exercise, the idea is that you need to find something similar to...
+#+NAME: 19
+#+begin_src racket
+  (define (fib n)
+    (fib-iter 1 0 0 1 n))
+
+  (define (fib-iter a b p q count)
+    (cond ((= count 0) b)
+          ((even? count)
+           (fib-iter a b ? ?))
+          (else (fib-iter (+ (* b q) (* a q) (* a p))
+                          (+ (* b p) (* a q))
+                          p
+                          q
+                          (- count 1)))))
+
+#+end_src
+
+* Exercise 20
+  #+NAME: gcd
+#+begin_src racket
+  (define (gcd a b)
+    (if (= b 0)
+        a
+        (gcd b (modulo a b))))
+#+end_src
+#+NAME 20
+#+begin_src racket
+  <<gcd>>
+
+#+end_src
+
+* Exercise 21
+  #+NAME: smallest-divisor
+  #+begin_src racket
+    #lang racket
+    (require "square.rkt")
+    (define (smallest-divisor n)
+      (find-divisor n 2))
+
+    (define (find-divisor n test-divisor)
+      (cond ((> (square test-divisor) n))
+            ((divides? test-divisor n) test-divisor)
+            (else find-divisor n (+ test-divisor 1))))
+
+    (define (divides? a b)
+      (= (modulo b a) 0))
+
+    (smallest-divisor 10)
+  #+end_src
+#+NAME 21
+#+begin_src racket
+#+end_src
