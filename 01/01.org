@@ -3,12 +3,17 @@
 :END:
 #+TITLE: Chapter 1 SICP
 * Common Library
-  #+NAME: square
-  #+begin_src racket :filename sicp-library.rkt
+  #+NAME: header
+#+begin_src racket :tangle sicp-library.rkt
     #lang racket
+#+end_src
+  #+NAME: square
+  #+begin_src racket :tangle sicp-library.rkt
     (define (square n)
       (* n n))
-
+  #+end_src
+  #+NAME: bottom
+  #+begin_src racket :tangle sicp-library.rkt
     (provide (all-defined-out))
   #+end_src
 
@@ -272,7 +277,7 @@
   #+NAME: smallest-divisor
   #+begin_src racket
     #lang racket
-    (require "square.rkt")
+    (require "sicp-library.rkt")
     (define (smallest-divisor n)
       (find-divisor n 2))
 
@@ -284,8 +289,14 @@
     (define (divides? a b)
       (= (modulo b a) 0))
 
-    (smallest-divisor 10)
+    (provide (all-defined-out))
   #+end_src
-#+NAME 21
+#+NAME: 21
 #+begin_src racket
+    #lang racket
+    (require threading)
+    (require "smallest-divisor.rkt")
+    (~> (map (lambda (x) (smallest-divisor x)) (list 199 1999 19999))
+        (display _))
+
 #+end_src
