@@ -21,6 +21,22 @@
 ;;;
 (require 'org)
 
+
+(defun sicp-org-set-src-name (orig-fun &rest args)
+  "Function for naming the CODE used in EDIT-BUFFER-NAME."
+  (let* ((name (plist-get (plist-get (org-element-at-point) 'src-block) ':name))
+         (new-name (if name
+                       (concat name ".rkt")
+                     (caddr args))))
+    (apply orig-fun (list (car args) new-name))
+    (make-local-variable 'org-src-code)
+    (setq org-src-code new-name)))
+
+
+
+(advice-remove 'org-edit-src-code #'sicp-org-set-src-name)
+(advice-add 'org-edit-src-code :around #'sicp-org-set-src-name)
+
 (defun sicp-add-exercise (number)
   "Function for adding a new exercise NUMBER for sicp."
   (interactive "nInsert exercise number: ")
