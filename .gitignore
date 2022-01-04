@@ -4,3 +4,4 @@
 /sicp.pdf
 02/*.rkt
 SicpLibrary/*.rkt
+/.DS_Store
