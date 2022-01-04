@@ -53,8 +53,8 @@
             (x-point (end-segment seg)))))
 
   (define (segment-length seg)
-    (sqrt (+ (square seg-x-size seg)
-             (square seg-y-size seg))))
+    (sqrt (+ (square (seg-x-size seg))
+             (square (seg-y-size seg)))))
 
   (define (print-point p)
     (display "(")
@@ -66,10 +66,12 @@
   ;;; This is not correct...
   ;;; Need to swap x-point and start-segment
   (define (midpoint-segment seg)
-    (cons (average (start-segment (x-point seg))
-                   (end-segment   (x-point seg)))
-          (average (start-segment (y-point seg))
-                   (end-segment   (y-point seg)))))
+    (cons (average (x-point (start-segment seg))
+                   (x-point (end-segment seg)))
+          (average (y-point (start-segment seg))
+                   (y-point (end-segment seg)))))
+
+  (provide (all-defined-out))
 #+end_src
 
 * Exercise 3
@@ -77,6 +79,7 @@
 #+begin_src racket
   #lang racket
   (require "../SicpLibrary/sicp-library.rkt")
+  (require "2.rkt")
 
   ;;; How can I represent a rectangle with cons?
   ;;; I think a rectangle is fully defined by two segments so I'll keep
@@ -87,30 +90,21 @@
   (define (make-rectangle-4p p1 p2 p3 p4)
     ;;; Make a rectangle by using points, the points are defined anti-clock wise
     ;;; from top left to top right
-    (cons (make-seg p2 p3)   ;; base
-          (make-seg p1 p2))) ;; height
+    (cons (make-segment p2 p3)   ;; base
+          (make-segment p1 p2))) ;; height
 
   (define (rect-left-seg rect)
     (car rect))
 
-
   (define (rect-base-seg rect)
     (car rect))
 
+  (define (height rect)
+    (segment-length (rect-left-seg rect)))
+
   (define (base rect)
-    (sqrt ())
-    )
-
-  (define (heigth rect)
-    (cdr rect))
-
-
-  (define (upper-point rect)
-    )
-
+    (segment-length (rect-base-seg rect)))
 
   (define (rectangle-area rect)
-    ;;; From what I recall A = b * h / 2
-    (/ (* (base rect) (heigth rect)) 2)
-
+    (* (base rect) (height rect)))
 #+end_src
