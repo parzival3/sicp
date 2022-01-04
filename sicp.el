@@ -30,12 +30,28 @@
                      (caddr args))))
     (apply orig-fun (list (car args) new-name))
     (make-local-variable 'org-src-code)
-    (setq org-src-code new-name)))
+    (setq org-src-code (expand-file-name new-name))))
 
+(defun sicp-local-var-default (var-name default)
+  "Get the value of the local variable VAR-NAME or use the DEFAULT value."
+  (if (buffer-local-boundp var-name (current-buffer))
+      (buffer-local-value var-name (current-buffer))
+    default))
 
+(defun sicp-run-racket-repl (orig-fun &rest args)
+  "ORIG-FUN ARGS."
+  (when (buffer-local-boundp 'org-src-code (current-buffer))
+    (let* ((name (buffer-local-value 'org-src-code (current-buffer)))
+           (content (buffer-substring-no-properties (point-min) (point-max))))
+      (with-temp-file name
+          (insert content))
+      (setq args (cons (list name) (cdr args)))))
+  (apply orig-fun args))
 
 (advice-remove 'org-edit-src-code #'sicp-org-set-src-name)
+(advice-remove 'racket--repl-run #'sicp-run-racket-repl)
 (advice-add 'org-edit-src-code :around #'sicp-org-set-src-name)
+(advice-add 'racket--repl-run :around #'sicp-run-racket-repl)
 
 (defun sicp-add-exercise (number)
   "Function for adding a new exercise NUMBER for sicp."
@@ -48,6 +64,13 @@
       (insert "\n")
       (insert (format "#+NAME: %s" number))
       (org-insert-structure-template "src racket"))))
+
+(defun sicp-add-lang-and-lib ()
+  "Function for adding the racket lang and sicp library."
+  (interactive)
+  (insert "#lang racket")
+  (insert "\n\n")
+  (insert "(require \"../SicpLibrary/sicp-library.rkt\")"))
 
 (provide 'sicp)
 ;;; sicp.el ends here

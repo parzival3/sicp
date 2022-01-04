@@ -22,6 +22,26 @@
         (else (cons (take s n) (slice (drop s 1) n)))))
   #+end_src
 
+  #+NAME: smallest-divisor
+  #+begin_src racket :tangle sicp-library.rkt
+    (define (smallest-divisor n)
+      (find-divisor n 2))
+
+    (define (find-divisor n test-divisor)
+      (cond ((> (square test-divisor) n) n)
+            ((divides? test-divisor n) test-divisor)
+            (else (find-divisor n (+ test-divisor 1)))))
+
+    (define (divides? a b)
+      (= (remainder b a) 0))
+  #+end_src
+
+  #+NAME: prime
+#+begin_src racket :tangle sicp-library.rkt
+      (define (prime? a)
+        (= (smallest-divisor a) a))
+
+#+end_src
   #+NAME: fermat-test
 #+begin_src racket :tangle sicp-library.rkt
     (define (expmod base exp m)
@@ -45,7 +65,7 @@
 #+end_src
 
 Probably I should create a more general function
-#+NAME: odd-range
+  #+NAME: odd-range
 #+begin_src racket :tangle sicp-library.rkt
   (define (create-odd-range start end)
     (let ((new-start (if (even? start)
@@ -60,10 +80,114 @@ Probably I should create a more general function
     (* x x x))
 #+end_src
 
+** Half-interval method
+   #+begin_src racket :tangle sicp-library.rkt
+     (define (average a b)
+       (if (> a b)
+           (/ (+ a b) 2)
+           (/ (+ b a) 2)))
+
+     (define (close-enough? x y) (< (abs (- y x)) 0.001))
+
+     (define (search f neg-point pos-point)
+       (let ((midpoint (average neg-point pos-point)))
+         (if (close-enough? neg-point pos-point)
+             midpoint
+             (let ((test-value (f midpoint)))
+               (cond ((positive? test-value) (search f neg-point midpoint))
+                     ((negative? test-value) (search f midpoint neg-point))
+                     (else midpoint))))))
+
+     (define (half-interval-method f a b)
+       (let ((a-value (f a))
+             (b-value (f b)))
+         (cond ((and (negative? a-value) (positive? b-value))
+                (search f a b))
+               ((and (negative? b-value) (positive? a-value))
+                (search f b a))
+               (else (error "Values are not of opposite sign" a b)))))
+   #+end_src
+** Fixed point equation
+   #+begin_src racket :tangle sicp-library.rkt
+     (define tollerance 0.00001)
+
+     (define (fixed-point f first-guess)
+
+       (define (close-enough? v1 v2)
+         (< (abs (- v1 v2)) tollerance))
+
+       (define (try guess)
+         (let ((next-guess (f guess)))
+           (if (close-enough? next-guess guess)
+               next-guess
+               (try next-guess))))
+
+       (try first-guess))
+   #+end_src
+
+** Continue fraction
+   #+begin_src racket :tangle sicp-library.rkt
+     (define (inc x) (+ 1 x))
+
+     (define (cont-frac n d k)
+       (define (denom x acc)
+         (if (= x k)
+             acc
+             (denom (inc x) (/ (n x) (+ (d x) acc)))))
+       (denom 0 0))
+   #+end_src
+
+** Fixed point print
+#+NAME:
+#+begin_src racket :tangle sicp-library.rkt
+  (define (fixed-point-print f first-guess)
+    (define (close-enough? v1 v2)
+      (< (abs (- v1 v2)) tollerance))
+
+    (define (try guess)
+      (let ((next (f guess)))
+        (display "(+ 1")
+        (newline)
+        (cond ((close-enough? guess next) (display "0)")
+                                          next)
+              (else (try next)
+                    (display ")")))))
+    (try first-guess))
+#+end_src
+** Derivate
+   #+begin_src racket :tangle sicp-library.rkt
+     (define dx 0.0001)
+
+     (define (derivate g)
+       (lambda (x) (/ (- (g (+ x dx)) (g x)) dx)))
+   #+end_src
+** Newton Methods
+   #+begin_src racket :tangle sicp-library.rkt
+     (define (newton-transform g)
+       (lambda (x) (- x (/ (g x) ((derivate g) x)))))
+
+     (define (newtons-method g guess)
+       (fixed-point (newton-transform g) guess))
+
+     (define (sqrt-newton x)
+       (newtons-method (lambda (y) (- (square y) x)) 1.0))
+   #+end_src
+** Fixed point transform
+#+begin_src racket :tangle sicp-library.rkt
+  (define (fixed-point-transform g transform guess)
+    (fixed-point (transform g) guess))
+#+end_src
+** Compose
+#+begin_src racket :tangle sicp-library.rkt
+  (define (compose f g)
+    (lambda (x) (f (g x))))
+#+end_src
+** Bottom
   #+NAME: bottom
   #+begin_src racket :tangle sicp-library.rkt
     (provide (all-defined-out))
   #+end_src
+
 
 * Exercise 5
   Trying to call /f/ with an interpreter that supports only the normal-order of evaluation we will have a infinite loop beacuse /p/
@@ -324,26 +448,6 @@ Probably I should create a more general function
 #+end_src
 
 * Exercise 21
-  #+NAME: smallest-divisor
-  #+begin_src racket
-    #lang racket
-    (require "sicp-library.rkt")
-    (define (smallest-divisor n)
-      (find-divisor n 2))
-
-    (define (find-divisor n test-divisor)
-      (cond ((> (square test-divisor) n) n)
-            ((divides? test-divisor n) test-divisor)
-            (else (find-divisor n (+ test-divisor 1)))))
-
-    (define (divides? a b)
-      (= (remainder b a) 0))
-
-    (define (prime? a)
-      (= (smallest-divisor a) a))
-
-    (provide (all-defined-out))
-  #+end_src
 #+NAME: 21
 #+begin_src racket
     #lang racket
@@ -563,4 +667,215 @@ The procedure is \theta\(n\) instead of \theta\(\log n\) because Lusi calculates
     (define bottom (product bottom-next 1 inc n))
 
     (/ top bottom))
+#+end_src
+
+* Exercise 32
+#+NAME: 32
+#+begin_src racket
+  #lang racket
+
+  (define (accumulate combiner null-value term a next b)
+    (define (acc-iter a acc)
+      (if (> a b)
+          acc
+          (acc-iter (next a) (combiner (term a) acc))))
+    (acc-iter a null-value))
+
+  (define (sum f a next b)
+    (accumulate + 0 f a next b))
+
+  (define (product f a next b)
+    (accumulate * 1 f a next b))
+#+end_src
+
+* Exercise 33
+#+NAME: 33
+#+begin_src racket
+  #lang racket
+  (require "sicp-library.rkt")
+
+  (define (filter-accumulate combiner null-value term a next b pred)
+    (define (acc-iter a acc)
+      (if (pred a)
+          (if (> a b)
+              acc
+              (acc-iter (next a) (combiner (term a) acc)))
+      (acc-iter (next a) acc)))
+
+    (acc-iter a null-value))
+
+  (define (accumulate-prime n)
+    (filter-accumulate + 0 (lambda (x) x) 2 (lambda (x) (+ x 1)) n prime?))
+
+  (define (accumulate-relative-prime n)
+    (filter-accumulate + 0 (lambda (x) x) 1 (lambda (x) (+ x 1)) n (lambda (x) (= 1 (gcd x n)))))
+
+  (provide (all-defined-out))
+
+#+end_src
+* Exercise 34
+  Evaluating ~(f (f))~ leads to an infinite recursion
+
+
+* Exercise 35
+#+NAME: 35
+#+begin_src racket
+  ;; Golden ration is a fixed point of the procedure 1 + 1/x
+  #lang racket
+  (require "sicp-library.rkt")
+
+  (fixed-point (lambda (x) (+ 1 (/ 1 x))) 1.0)
+#+end_src
+
+* Exercise 36
+
+#+NAME: 36
+#+begin_src racket
+  #lang racket
+  (require "sicp-library.rkt")
+
+  ;;; Find a solution of x^x = 1000
+  (define (x-power-x x)
+    (lambda (y) (/ (log x) (log y))))
+
+  (define (x-power-x-average x)
+    (lambda (y) (* 0.5 (+ y (/ (log x) (log y))))))
+
+  (fixed-point-print (x-power-x 1000) 2);; 34
+  (newline)
+  (fixed-point-print (x-power-x-average 1000) 2);; 9
+#+end_src
+
+* Exercise 37
+#+NAME: 37
+#+begin_src racket
+  #lang racket
+  (require "sicp-library.rkt")
+
+  (cont-frac (lambda (x) 1.0)
+             (lambda (y) 1.0)
+             100)
+
+
+  (define (phi-approx k)
+    (cont-frac (lambda (x) 1.0)
+               (lambda (x) 1.0)
+               k))
+
+  (define (find-approx f inc-counter first-guess)
+    (define (close-enough? v1 v2)
+      (< (abs (- v1 v2)) tollerance))
+
+    (define (try counter guess)
+      (let ((next (f (inc-counter counter))))
+        (display "(+ 1")
+        (newline)
+        (cond ((close-enough? guess next) (display "0)")
+                                          next)
+              (else (try (inc-counter counter) next)
+                    (display ")")))))
+    (try 0 first-guess))
+
+
+  (find-approx phi-approx inc 1.6) ;; 14 times
+#+end_src
+
+* Exercise 38
+#+NAME: 38
+#+begin_src racket
+  #lang racket
+  (require "sicp-library.rkt")
+
+  (define (euler-denom-coef x)
+    (cond ((= x 0) 1)
+          ((= (remainder (- x 1) 3) 0) (* (+ 1 (/ (- x 1) 3.0)) 2))
+          (else 1)))
+
+  (cont-frac (lambda (x) x) euler-denom-coef 10)
+#+end_src
+
+* Exercise 39
+#+NAME: 39
+#+begin_src racket
+  #lang racket
+  (require "sicp-library.rkt")
+
+  (define (tang x k)
+    (/  x (- 1 (cont-frac (lambda (x) (square x))
+                          (lambda (x) (+ (* 2 x) 1))
+                          k))))
+
+
+  (radians->degrees 0.5)
+  (radians->degrees (tang 0.5 100)) ;;; radians
+#+end_src
+
+* Exercise 40
+#+NAME: 40
+#+begin_src racket
+  #lang racket
+  (require "sicp-library.rkt")
+
+  (define (cubic a b c)
+    (lambda (x) (+ (cube x) (* a (square x) (* b x) c))))
+
+
+  (define (cubic-sol x)
+    (newtons-method (cubic 1 2 3) x))
+#+end_src
+
+* Exercise 41
+#+NAME: 41
+#+begin_src racket
+  #lang racket
+  (require "sicp-library.rkt")
+
+  (define (double proc)
+    (lambda (y) (proc (proc y))))
+
+  (((double (double double)) inc) 5)
+
+#+end_src
+
+* Exercise 42
+#+NAME: 42
+#+begin_src racket
+  #lang racket
+  (require "sicp-library.rkt")
+  ((compose square inc) 6)
+#+end_src
+
+* Exercise 43
+#+NAME: 43
+#+begin_src racket
+  #lang racket
+  (require "sicp-library.rkt")
+
+  (define (repeted f x)
+      (define (compositing f)
+      (lambda (y)
+          (if (= y 1)
+              f
+              (compose f ((compositing f) (- y 1))))))
+    ((compositing f) x))
+
+  ((repeted square 2) 5)
+
+  (provide (all-defined-out))
+#+end_src
+
+* Exercise 44
+#+NAME: 44
+#+begin_src racket
+  #lang racket
+  (require "sicp-library.rkt")
+  (require "43.rkt")
+
+
+  (define (smooth-f f)
+    (lambda (x) (/ (f x) (f (+ x dx)) (f (- x dx)) 3)))
+
+
+  (define (smooth f n)
+    (repeted (smooth-f f) n))
 #+end_src

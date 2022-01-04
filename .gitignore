@@ -2,3 +2,5 @@
 /01/.DS_Store
 /solutions.org
 /sicp.pdf
+02/*.rkt
+SicpLibrary/*.rkt

@@ -1,0 +1,230 @@
+#+TITLE: Sicp Library
+
+* Header
+  #+NAME: header
+#+begin_src racket :tangle sicp-library.rkt
+    #lang racket
+#+end_src
+
+* Content
+** 01
+  #+NAME: square
+  #+begin_src racket :tangle sicp-library.rkt
+    (define (square n)
+      (* n n))
+  #+end_src
+
+  #+NAME: slice
+  #+begin_src racket :tangle sicp-library.rkt
+(define (slice s n)
+  (cond ((eq? s null) s)
+        ((> n (length s)) null)
+        (else (cons (take s n) (slice (drop s 1) n)))))
+  #+end_src
+
+  #+NAME: smallest-divisor
+  #+begin_src racket :tangle sicp-library.rkt
+    (define (smallest-divisor n)
+      (find-divisor n 2))
+
+    (define (find-divisor n test-divisor)
+      (cond ((> (square test-divisor) n) n)
+            ((divides? test-divisor n) test-divisor)
+            (else (find-divisor n (+ test-divisor 1)))))
+
+    (define (divides? a b)
+      (= (remainder b a) 0))
+  #+end_src
+
+  #+NAME: prime
+#+begin_src racket :tangle sicp-library.rkt
+      (define (prime? a)
+        (= (smallest-divisor a) a))
+
+#+end_src
+  #+NAME: fermat-test
+#+begin_src racket :tangle sicp-library.rkt
+    (define (expmod base exp m)
+      (cond ((= exp 0) 1)
+            ((even? exp)
+             (remainder (square (expmod base (/ exp 2) m))
+                        m))
+            (else
+             (remainder (* base (expmod base (- exp 1) m)) m))))
+
+    (define (fermat-test n)
+      (define (try-it a)
+        (= (expmod a n n) a))
+      (try-it (+ 1 (random (- n 1)))))
+
+
+    (define (fast-prime? n times)
+      (cond ((= times 0) true)
+            ((fermat-test n) (fast-prime? n (- times 1)))
+            (else false)))
+#+end_src
+
+Probably I should create a more general function
+  #+NAME: odd-range
+#+begin_src racket :tangle sicp-library.rkt
+  (define (create-odd-range start end)
+    (let ((new-start (if (even? start)
+                         (+ 1 start)
+                         start)))
+      (range new-start (+ end 1) 2)))
+#+end_src
+
+#+NAME: cube
+#+begin_src racket :tangle sicp-library.rkt
+  (define (cube x)
+    (* x x x))
+#+end_src
+
+*** Half-interval method
+   #+begin_src racket :tangle sicp-library.rkt
+     (define (average a b)
+       (if (> a b)
+           (/ (+ a b) 2)
+           (/ (+ b a) 2)))
+
+     (define (close-enough? x y) (< (abs (- y x)) 0.001))
+
+     (define (search f neg-point pos-point)
+       (let ((midpoint (average neg-point pos-point)))
+         (if (close-enough? neg-point pos-point)
+             midpoint
+             (let ((test-value (f midpoint)))
+               (cond ((positive? test-value) (search f neg-point midpoint))
+                     ((negative? test-value) (search f midpoint neg-point))
+                     (else midpoint))))))
+
+     (define (half-interval-method f a b)
+       (let ((a-value (f a))
+             (b-value (f b)))
+         (cond ((and (negative? a-value) (positive? b-value))
+                (search f a b))
+               ((and (negative? b-value) (positive? a-value))
+                (search f b a))
+               (else (error "Values are not of opposite sign" a b)))))
+   #+end_src
+*** Fixed point equation
+   #+begin_src racket :tangle sicp-library.rkt
+     (define tollerance 0.00001)
+
+     (define (fixed-point f first-guess)
+
+       (define (close-enough? v1 v2)
+         (< (abs (- v1 v2)) tollerance))
+
+       (define (try guess)
+         (let ((next-guess (f guess)))
+           (if (close-enough? next-guess guess)
+               next-guess
+               (try next-guess))))
+
+       (try first-guess))
+   #+end_src
+
+*** Continue fraction
+   #+begin_src racket :tangle sicp-library.rkt
+     (define (inc x) (+ 1 x))
+
+     (define (cont-frac n d k)
+       (define (denom x acc)
+         (if (= x k)
+             acc
+             (denom (inc x) (/ (n x) (+ (d x) acc)))))
+       (denom 0 0))
+   #+end_src
+
+*** Fixed point print
+#+NAME:
+#+begin_src racket :tangle sicp-library.rkt
+  (define (fixed-point-print f first-guess)
+    (define (close-enough? v1 v2)
+      (< (abs (- v1 v2)) tollerance))
+
+    (define (try guess)
+      (let ((next (f guess)))
+        (display "(+ 1")
+        (newline)
+        (cond ((close-enough? guess next) (display "0)")
+                                          next)
+              (else (try next)
+                    (display ")")))))
+    (try first-guess))
+#+end_src
+*** Derivate
+   #+begin_src racket :tangle sicp-library.rkt
+     (define dx 0.0001)
+
+     (define (derivate g)
+       (lambda (x) (/ (- (g (+ x dx)) (g x)) dx)))
+   #+end_src
+*** Newton Methods
+   #+begin_src racket :tangle sicp-library.rkt
+     (define (newton-transform g)
+       (lambda (x) (- x (/ (g x) ((derivate g) x)))))
+
+     (define (newtons-method g guess)
+       (fixed-point (newton-transform g) guess))
+
+     (define (sqrt-newton x)
+       (newtons-method (lambda (y) (- (square y) x)) 1.0))
+   #+end_src
+*** Fixed point transform
+#+begin_src racket :tangle sicp-library.rkt
+  (define (fixed-point-transform g transform guess)
+    (fixed-point (transform g) guess))
+#+end_src
+*** Compose
+#+begin_src racket :tangle sicp-library.rkt
+  (define (compose f g)
+    (lambda (x) (f (g x))))
+#+end_src
+
+** 02
+*** Rational functions
+#+begin_src racket :tangle sicp-library.rkt
+  (define (make-rat x y)
+    (cons x y))
+
+  (define (numer x)
+    (car x))
+
+  (define (denom y)
+    (cdr y))
+
+  (define (add-rat x y)
+    (make-rat (+ (* (numer x) (denom y))
+                 (* (numer y) (denom x)))
+              (* (denom x) (denom y))))
+
+  (define (sub-rat x y)
+    (make-rat (- (* (numer x) (denom y))
+                 (* (numer y) (denom x)))
+              (* (denom x) (denom y))))
+
+  (define (mul-rat x y)
+    (make-rat (* (numer x) (numer y))
+              (* (denom x) (denom y))))
+
+  (define (div-rat x y)
+    (make-rat (* (numer x) (denom y))
+              (* (denom x) (numer y))))
+
+  (define (equal-rat x y)
+    (and (= (numer x) (numer y))
+         (= (denom x) (denom y))))
+
+
+  (define (print-rat x)
+    (newline)
+    (display (numer x))
+    (display "/")
+    (display (denom x)))
+#+end_src
+* Ending
+  #+begin_src racket :tangle sicp-library.rkt
+    (provide (all-defined-out))
+  #+end_src

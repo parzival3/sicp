@@ -1,0 +1,116 @@
+:PROPERTIES:
+:header-args:racket: :tangle (concat (plist-get (plist-get (org-element-at-point) 'src-block) ':name) ".rkt")
+:END:
+#+TITLE: Chapter 2 SICP
+
+
+* Exercise 1
+#+NAME: 1
+#+begin_src racket
+  #lang racket
+  (require "../SicpLibrary/sicp-library.rkt")
+
+  (define (make-rat x y)
+    (if (and (< x 0)
+             (< y 0))
+        (cons (abs x) (abs y))
+        (cons x y)))
+#+end_src
+
+
+
+* Exercise 2
+#+NAME: 2
+#+begin_src racket
+  #lang racket
+
+  (require "../SicpLibrary/sicp-library.rkt")
+
+  (define (make-point x y)
+    (cons x y))
+
+  (define (x-point p)
+    (car p))
+
+  (define (y-point p)
+    (cdr p))
+
+  (define (make-segment start end)
+    (cons start end))
+
+  (define (start-segment seg)
+    (car seg))
+
+  (define (end-segment seg)
+    (cdr seg))
+
+  (define (seg-y-size seg)
+    (abs (- (y-point (start-segment seg))
+            (y-point (end-segment seg)))))
+
+  (define (seg-x-size seg)
+    (abs (- (x-point (start-segment seg))
+            (x-point (end-segment seg)))))
+
+  (define (segment-length seg)
+    (sqrt (+ (square seg-x-size seg)
+             (square seg-y-size seg))))
+
+  (define (print-point p)
+    (display "(")
+    (display (x-point p))
+    (display ",")
+    (display (y-point p))
+    (display ")"))
+
+  ;;; This is not correct...
+  ;;; Need to swap x-point and start-segment
+  (define (midpoint-segment seg)
+    (cons (average (start-segment (x-point seg))
+                   (end-segment   (x-point seg)))
+          (average (start-segment (y-point seg))
+                   (end-segment   (y-point seg)))))
+#+end_src
+
+* Exercise 3
+#+NAME: 3
+#+begin_src racket
+  #lang racket
+  (require "../SicpLibrary/sicp-library.rkt")
+
+  ;;; How can I represent a rectangle with cons?
+  ;;; I think a rectangle is fully defined by two segments so I'll keep
+  ;;; this representation and modify the constructor in order to make it
+  ;;; easy to define different abstractions. Where the head is the base and the
+  ;;; car is the heigth
+
+  (define (make-rectangle-4p p1 p2 p3 p4)
+    ;;; Make a rectangle by using points, the points are defined anti-clock wise
+    ;;; from top left to top right
+    (cons (make-seg p2 p3)   ;; base
+          (make-seg p1 p2))) ;; height
+
+  (define (rect-left-seg rect)
+    (car rect))
+
+
+  (define (rect-base-seg rect)
+    (car rect))
+
+  (define (base rect)
+    (sqrt ())
+    )
+
+  (define (heigth rect)
+    (cdr rect))
+
+
+  (define (upper-point rect)
+    )
+
+
+  (define (rectangle-area rect)
+    ;;; From what I recall A = b * h / 2
+    (/ (* (base rect) (heigth rect)) 2)
+
+#+end_src
