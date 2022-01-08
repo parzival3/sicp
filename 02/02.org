@@ -107,4 +107,56 @@
 
   (define (rectangle-area rect)
     (* (base rect) (height rect)))
+
+  (define (rectangle-perimeter rect)
+    (+ (* (base rect)   2)
+       (* (height rect) 2)))
+
+  (define pa (make-point -1.0  1.0))
+  (define pb (make-point -1.0 -1.0))
+  (define pc (make-point  1.0 -1.0))
+  (define pd (make-point  1.0  1.0))
+
+  (define rect (make-rectangle-4p pa pb pc pd))
+
+  (rectangle-area rect)
+  (rectangle-perimeter rect)
+#+end_src
+
+* Exercise 4
+#+NAME: 4
+#+begin_src racket
+  #lang racket
+
+  (define (cons x y)
+    (lambda (m) (m x y)))
+
+  (define (car z)
+    (z (lambda (p q) p)))
+
+  (define (cdr z)
+    (z (lambda (p q) q)))
+#+end_src
+
+* Exercise 5
+#+NAME: 5
+#+begin_src racket
+  #lang racket
+
+  (define (cons-ab a b)
+    (* (expt 2 a)
+       (expt 3 b)))
+
+
+  (define (car-ab num)
+    (define (car-impl x)
+      (cond [(not (= 0 (remainder x 3))) (/ (log x) (log 2))]
+            [else (car-impl (/ x 3))]))
+    (car-impl num))
+
+  (define (cdr-ab num)
+    (define (cdr-impl x)
+      (cond [(not (= 0 (remainder x 2))) (/ (log x) (log 3))]
+            [else (cdr-impl (/ x 2))]))
+    (cdr-impl num))
 #+end_src
