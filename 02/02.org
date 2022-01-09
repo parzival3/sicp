@@ -291,3 +291,79 @@
   (define (percent int)
     (/ (* (width int) 100) (center int)))
 #+end_src
+
+* TODO Exercise 13
+#+NAME: 13
+#+begin_src racket
+#+end_src
+
+* TODO Exercise 14
+#+NAME: 14
+#+begin_src racket
+#+end_src
+* TODO Exercise 15
+#+NAME: 15
+#+begin_src racket
+#+end_src
+* TODO Exercise 16
+#+NAME: 16
+#+begin_src racket
+#+end_src
+
+
+* Exercise 17
+#+NAME: 17
+#+begin_src racket
+  #lang racket
+
+  (define (last-pair l)
+    (cond [(null? l) null]
+          [(null? (caddr l)) (car l)]
+          [else (last-pair (cdr l))]))
+#+end_src
+
+* Exercise 18
+#+NAME: 18
+#+begin_src racket
+  #lang racket
+
+
+  (define (m-reverse l)
+    (define (m-reverse-impl l a)
+      (if (null? l)
+          a
+          (m-reverse-impl (cdr l) (cons (car l) a))))
+    (m-reverse-impl l null))
+#+end_src
+
+* Exercise 19
+#+NAME: 19
+#+begin_src racket
+  #lang racket
+
+  (require "../SicpLibrary/sicp-library.rkt")
+
+  (define (no-more? coins-value)
+    (null? coins-value))
+
+  (define (except-first-denomination coins-value)
+    (cdr conis-value))
+
+  (define (first-denomination coins-value)
+    (car coins-value))
+#+end_src
+* Exercise 20
+#+NAME: 20
+#+begin_src racket
+  #lang racket
+  (define (same-parity f . x)
+    (define (filter-list l f a)
+      (if (null? l)
+          a
+          (filter-list (cdr l) f (if (f (car l))
+                                     (cons (car l) a)
+                                     a))))
+    (let ((function (if (even? f) even?
+                        odd?)))
+      (reverse (filter-list x function (list f)))))
+#+end_src
